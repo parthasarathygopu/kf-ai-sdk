@@ -242,3 +242,4 @@ item.StartDate.readOnly;             // is readonly?
 - **Don't call `activity.update()` or `activity.complete()` manually.** `handleSubmit` handles the API calls. Calling them yourself will double-submit.
 - **Don't render the form before `isLoading` is false.** The activity data and metadata are being fetched. Guard with `if (isLoading) return <Loading />`.
 - **Don't forget `activity_instance_id` is required.** This is the activity instance ID (from `workflow.start()` or `getInProgressList()`), not a BDO record ID.
+- **Don't pass a single options object.** `useActivityForm` takes 2 arguments: `useActivityForm(activity, { activity_instance_id })`. This is different from `useActivityTable` which takes a single object `useActivityTable({ activity, status })`. Passing `useActivityForm({ activity, activity_instance_id })` causes a type error.

@@ -25,6 +25,26 @@ import type { ListOptionsType } from "@ram_28/kf-ai-sdk/api/types";
    ```typescript
    const product = useMemo(() => new AdminProduct(), []);
    ```
+5. **`Filter` must be `ConditionGroupType`** — Always wrap conditions in `{ Operator: "And", Condition: [...] }`. Never pass a flat condition:
+   ```typescript
+   // ❌ WRONG — flat ConditionType causes TS2322
+   await product.list({ Filter: { Operator: "EQ", LHSField: "Category", RHSValue: "Electronics" } });
+   // ✅ CORRECT — ConditionGroupType wrapper
+   await product.list({ Filter: { Operator: "And", Condition: [
+     { Operator: "EQ", LHSField: "Category", RHSValue: "Electronics", RHSType: "Constant" }
+   ] } });
+   ```
+6. **Use `PageSize` and `Page`, not `Take` or `Limit`** — `ListOptionsType` uses `PageSize` (number of items per page) and `Page` (1-indexed page number).
+7. **Never spread ItemType proxies.** `list()`, `get()`, and `create()` return proxied `ItemType` objects. Spreading `{ ...item, extraProp }` copies enumerable keys but destroys the proxy — `.get()` and `.set()` stop working. Instead, wrap in a container object:
+   ```typescript
+   // ❌ WRONG — proxy is destroyed, .get() fails at runtime
+   const enriched = items.map(item => ({ ...item, extra: fetchedData }));
+   enriched[0].Title.get(); // TypeError: get is not a function
+
+   // ✅ CORRECT — proxy preserved in container
+   const enriched = items.map(item => ({ entry: item, extra: fetchedData }));
+   enriched[0].entry.Title.get(); // works
+   ```
 
 ## Quick Start
 

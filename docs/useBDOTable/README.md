@@ -237,7 +237,17 @@ This is the standard pattern after any mutation (create, update, delete) that sh
 ## Common Mistakes
 
 - **Don't forget `useMemo` on the BDO.** `new BdoClass()` must be wrapped in `useMemo(() => ..., [])`. Re-creating the instance on every render causes infinite refetching.
+- **Don't use `table.data`** — the property is `table.rows`. Other table libraries use `data`, but this SDK uses `rows`.
+- **Don't use `table.setSearch()`** — the correct API is `table.search.set(field, query)` with two arguments: field ID and query string.
 - **Don't access row fields directly.** `row.Title` is an accessor object, not the value. Use `row.Title.get()` to read the value.
 - **Don't use 0-indexed pagination.** Pages start at 1. Passing `pageNo: 0` will produce incorrect results.
 - **Don't forget to guard on `isLoading` before rendering rows.** While loading, `rows` is an empty array. Guard with `if (table.isLoading) return <Loading />` to avoid rendering an empty table.
 - **Don't hardcode field names as strings.** Use the BDO field IDs (`product.Title.id`) instead of raw strings (`"Title"`). This keeps your code type-safe and resilient to field renames.
+- **`initialState.sort` format is `[{ fieldName: "ASC" }]`** — a single-key object, NOT `{ field, direction }`. Other libraries use `{ field: "Title", direction: "asc" }` but this SDK uses `[{ Title: "ASC" }]`. Note: the direction is uppercase `"ASC"` or `"DESC"`.
+  ```tsx
+  // ❌ WRONG — { field, direction } format from other libraries
+  initialState: { sort: [{ field: product.Title.id, direction: "desc" }] }
+  // ✅ CORRECT — single-key object with uppercase direction
+  initialState: { sort: [{ Title: "DESC" }] }
+  ```
+- **Don't pass `bdo.field` where `bdo.field.id` is expected.** `bdo.Title` is a `StringField` object, not a string. Use `bdo.Title.id` to get the field ID string. Passing the field object causes TS2322 (`StringField` not assignable to `string`).

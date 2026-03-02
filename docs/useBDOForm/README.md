@@ -170,6 +170,32 @@ item.Title.readOnly;             // is readonly?
 - **Don't forget `useMemo` on the BDO.** `new BdoClass()` must be wrapped in `useMemo(() => ..., [])`. Re-creating the instance on every render breaks the hook.
 - **Don't set date `defaultValues` to empty string.** Use `undefined` instead. Empty strings cause type validation errors for Date and DateTime fields.
 - **Don't mix `register()` and `watch()`+`setValue()` for the same field.** Pick one approach per field. `register()` for native inputs, `watch()`+`setValue()` for custom components.
-- **Don't use `register()` for select, checkbox, or reference components.** They don't fire native change events. Use `watch()` + `setValue()`.
+- **Don't use `register()` for select, checkbox, switch, or reference components.** They don't fire native change events. Use `watch()` + `setValue()`.
 - **Don't call `bdo.create()` or `bdo.update()` manually.** `handleSubmit` handles the API call. Calling them yourself will double-submit.
+- **`handleSubmit` is curried — pass it directly to `onSubmit`, don't call it inside a handler.** It takes `(onSuccess, onError)` and returns an event handler. Write `<form onSubmit={handleSubmit(onSuccess, onError)}>`. NEVER write `<form onSubmit={(e) => handleSubmit(data)}>` or `await handleSubmit(data)` — this passes the wrong argument and the API call never fires.
+  ```tsx
+  // ❌ WRONG — handleSubmit receives FormEvent, not form data. API never fires.
+  const onSubmit = async (data) => { await handleSubmit(data); };
+  <form onSubmit={onSubmit}>
+
+  // ✅ CORRECT — handleSubmit wraps your callback, validates, calls API, then invokes onSuccess
+  <form onSubmit={handleSubmit(
+    (result) => { toast.success("Created"); navigate("/products"); },
+    (error) => { toast.error("Failed"); }
+  )}>
+  ```
 - **Don't render the form before `isLoading` is false.** In create mode, the draft is being allocated. In update mode, the record is being fetched. Guard with `if (isLoading) return <Loading />`.
+- **There is no `operation` field.** Create vs. update mode is determined solely by `recordId`: absent = create, present = update. Never pass `operation: "create"` or `operation: "update"`.
+- **Guard `loadError` in edit forms.** After the `isLoading` check, add `if (loadError) return <ErrorMessage />` before rendering the form. Without this, `item` may be undefined in update mode.
+  ```tsx
+  if (isLoading) return <Loading />;
+  if (loadError) return <p>Error: {loadError.message}</p>;
+  ```
+- **Don't pass `operation` even though the SDK type supports it.** The SDK has `UseBDOFormAutoOptionsType` that auto-infers create/update from `recordId`. Passing `operation: "update"` requires `recordId: string` (not `string | undefined`), causing TS errors with `useParams()`. Omit `operation` entirely:
+  ```tsx
+  // ❌ WRONG — TS2345 when id is string | undefined from useParams
+  useBDOForm({ bdo, recordId: id, operation: "update" })
+
+  // ✅ CORRECT — auto mode handles string | undefined
+  useBDOForm({ bdo, recordId: id })
+  ```

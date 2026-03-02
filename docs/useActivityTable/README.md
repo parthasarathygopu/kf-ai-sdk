@@ -261,3 +261,5 @@ This is the standard pattern after any mutation (complete, update, save) that sh
 - **Don't use 0-indexed pagination.** Pages start at 1. Passing `pageNo: 0` will produce incorrect results.
 - **Don't forget to guard on `isLoading` before rendering rows.** While loading, `rows` is an empty array. Guard with `if (table.isLoading) return <Loading />` to avoid rendering an empty table.
 - **Don't hardcode field names as strings.** Use the activity field IDs (`activity.StartDate.id`) instead of raw strings (`"StartDate"`). This keeps your code type-safe and resilient to field renames.
+- **Don't use `table.data`** — the property is `table.rows`, same as `useBDOTable`.
+- **`initialState.sort` format is `[{ fieldName: "ASC" }]`** — NOT `{ field, direction }`. Write `sort: [{ StartDate: "DESC" }]`, not `sort: [{ field: "StartDate", direction: "desc" }]`.

@@ -64,8 +64,11 @@ This applies to ALL field types: `StringField.get()` → `string | undefined`, `
 2. **`.get()` returns `T | undefined`** — Always null-guard before passing to `new Date()`, `format()`, template literals, or typed function parameters. See section above.
 3. **Don't confuse `StringField` (class) with `StringFieldType` (type alias)** — Different modules.
 4. **`fetchOptions()` requires a parent BDO** — Standalone fields will throw.
-5. **SelectField meta `Type` is `"String"`** — `Constraint.Enum` differentiates it.
+5. **SelectField meta `Type` is `"String"`** — `Constraint.Enum` differentiates it. Only `SelectField` has the `.options` getter. `StringField` (even with an enum constraint) does NOT have `.options` — you must hardcode the enum values from the BDO file.
 6. **Always use pre-built components for File/Image** — `<FileUpload>`, `<ImageUpload>`, `<FilePreview>`, `<ImageThumbnail>`.
+7. **`<ImageUpload>` / `<FileUpload>` ONLY work with `ImageField` / `FileField`** — Never use them for `TextField` or `StringField`, even if the field name contains "image" or "file". A `TextField` named `image_urls` is still a text field — render it with `<Textarea>` or `<Input>`, not `<ImageUpload>`. Determine the component from the **field class** in the BDO file, not the field name.
+8. **`<ImageUpload>` / `<FileUpload>` `field` prop MUST be `item.Field`, NOT `bdo.Field`** — The `upload()` and `deleteAttachment()` methods live on the form item accessor (created by the Item proxy), not on the BDO field class. Passing `bdo.Field` causes silent upload failures.
+9. **BooleanField: use `watch()` + `setValue()`, never `register()`** — `<Switch>` and `<Checkbox>` components don't fire native change events. Using `register()` means the value never updates on toggle.
 
 ## Quick Start
 
